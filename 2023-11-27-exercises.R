@@ -18,13 +18,14 @@ draw_points(1e5) |>
 
 tibble(
   n = 10^(1:6)
-) |>
+) %>%
   mutate(
-    draws = map(n,  draw_points)
-  ) |>
-  View()
+    draws = purrr::map(n, draw_points),
+    n_in_ucirc = purrr::map_int(draws, ~sum(in_unit_circ(.x))),
+    pi_approx = 4 * n_in_ucirc / n,
+    pi_error = abs(pi - pi_approx)
+  )
 
-library(tidyverse)
 
 tibble(
   disc = repurrrsive::discog
