@@ -11,8 +11,6 @@ session = polite::bow(url)
 page = polite::scrape(session)
 
 
-
-
 d = tibble(
   name = page |> 
     html_elements(".dynamic-text-list__streaming-links+ ul .dynamic-text-list__item-title") |>
