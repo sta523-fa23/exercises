@@ -1,0 +1,54 @@
+```{r}
+library(DBI)
+db = dbConnect(RSQLite::SQLite(), dbname  = "class_2023-10-27/employees.sqlite")
+```
+
+## Exercise 1
+
+### 1. The total costs in payroll for this company
+
+```{sql, connection=db}
+SELECT SUM(salary) AS total_payroll FROM employees;
+```
+
+### 2. The average salary within each department
+
+```{sql, connection=db}
+SELECT dept, AVG(salary) AS avg_salary FROM employees GROUP BY dept;
+```
+
+
+## Exercise 2
+
+### Lets try to create a table that has a new column - abv_avg which 
+### contains how much more (or less) than the average, for their
+### department, each person is paid.
+
+```{sql, connection=db}
+SELECT *, salary - avg_salary AS diff  FROM
+  employees LEFT JOIN
+  ( SELECT dept, AVG(salary) AS avg_salary FROM employees GROUP BY dept )
+  USING (dept)
+  ORDER BY dept, diff DESC
+;
+```
+
+
+
+## Exercise 3
+### Write a query that determines the total number of seats available on all of the planes that flew out of New York in 2013.
+
+```{r}
+db = dbConnect(RSQLite::SQLite(), dbname  = "class_2023-10-27/flights.sqlite")
+```
+
+### Wrong answer
+```{sql, connection=db}
+SELECT SUM(seats) FROM flights NATURAL LEFT JOIN planes;
+```
+
+### Correct answer
+
+```{sql, connection=db}
+SELECT SUM(seats) FROM flights LEFT JOIN planes USING (tailnum);
+```
