@@ -3,6 +3,10 @@ library(shiny)
 library(bslib)
 library(histoslider)
 
+###########################
+### Setup and data prep ###
+###########################
+
 flights = read_rds("flights.rds")
 
 ggplot2::theme_set(theme_minimal())
@@ -31,10 +35,6 @@ dests = flights |>
   ) |>
   sf::st_as_sf()
 
-
-
-
-SLIDER_HEIGHT = 150
 CHOICES = list(
   origin = c(
     "Choose origin(s)" = "",
@@ -54,8 +54,9 @@ CHOICES = list(
 
 
 
-
-
+######################
+### Side bar setup ###
+######################
 
 sidebar_acc = accordion(
   #open = c("Origin", "Destination"),
@@ -97,31 +98,35 @@ sidebar_acc = accordion(
     input_histoslider(
       "air_time", "Air time",
       flights$air_time,
-      height = SLIDER_HEIGHT,
+      height = 150,
       #options = list(handleLabelFormat = "0d")
     ),
     input_histoslider(
       "sched_dep_time", "Departure time",
       flights$sched_dep_time,
-      height = SLIDER_HEIGHT,
+      height = 150,
       options = list(handleLabelFormat = "0d")
     ),
     input_histoslider(
       "sched_arr_time", "Arrival time",
       flights$sched_arr_time,
-      height = SLIDER_HEIGHT,
+      height = 150,
       options = list(handleLabelFormat = "0d")
     ),
     input_histoslider(
       "date", "Date",
       flights$date,
-      height = SLIDER_HEIGHT,
+      height = 150,
       breaks = "months",
       options = list(handleLabelFormat = "%b %e")
     )
   )
 )
 
+
+#######################
+### nav panel setup ###
+#######################
 
 delay_panel = nav_panel(
   "Delay overview",
@@ -155,12 +160,15 @@ delay_panel = nav_panel(
           )
         )
       ),
-      plotOutput("scatter_delay")
+      plotOutput("delay_plot")
     )
   )
 )
 
 
+################
+### UI setup ###
+################
 
 ui = page_navbar(
   theme = bs_theme(
@@ -185,8 +193,14 @@ ui = page_navbar(
   )
 )
 
+
+####################
+### server setup ###
+####################
+
 server = function(input, output, session) {
   
+  # Reset button observer
   observe({
     updateSelectInput(
       inputId = "origin",
@@ -205,13 +219,6 @@ server = function(input, output, session) {
   
   # Flights with all filters applied (i.e., data used for value boxes/plots)
   flight_dat = reactive({
-    filter_select = function(d, input, expr) {
-      if (!is.null(input) && all(input != ""))
-        filter(d, !!expr)
-      else
-        d
-    }
-    
     between2 = function(x, r) {
       if (length(x) != 0)
         dplyr::between(x, r[1], r[2])
@@ -237,6 +244,7 @@ server = function(input, output, session) {
     d
   })
   
+  # Calculate summary values for the value boxes
   summary_vals = reactive({
     d = flight_dat()
     validate(need(nrow(d) > 0, "No flights match the selected filters"))
@@ -252,6 +260,7 @@ server = function(input, output, session) {
     )
   })
   
+  # Render value boxes
   output$value_boxes = renderUI({
     vals = summary_vals()
     
@@ -284,6 +293,8 @@ server = function(input, output, session) {
     layout_columns(n_flights, delay_dep, delay_arr)
   })
   
+  
+  # Flight path plot
   output$flight_paths = leaflet::renderLeaflet({
     routes = flight_dat() |> 
       select(origin, dest, ends_with(c("lat","lon"))) |>
@@ -315,7 +326,8 @@ server = function(input, output, session) {
       )
   })
   
-  output$scatter_delay = renderPlot({
+  # Delay plot
+  output$delay_plot = renderPlot({
     d = flight_dat()
     validate(need(nrow(d) > 0, "No flights match the selected filters"))
     
