@@ -187,10 +187,10 @@ ui = page_navbar(
   ),
   sidebar = sidebar(width = 275, sidebar_acc),
   nav_spacer(),
-  delay_panel,
-  nav_item(
-    input_dark_mode(id = "dark_mode", mode = "light")
-  )
+  delay_panel
+  #nav_item(
+  #  input_dark_mode(id = "dark_mode", mode = "light")
+  #)
 )
 
 

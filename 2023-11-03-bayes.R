@@ -1,8 +1,12 @@
 library(tidyverse)
 library(shiny)
+library(bslib)
+
+thematic::thematic_shiny()
 
 shinyApp(
   ui = fluidPage(
+    theme = bs_theme(version = 5, preset = "darkly"),
     title = "Beta-binomial app",
     titlePanel("Beta-binomial app"),
     sidebarLayout(
@@ -28,6 +32,7 @@ shinyApp(
     )
   ),
   server = function(input, output, session) {
+    bs_themer()
     
     observe({
       updateSliderInput(session, "x", max = input$n)
